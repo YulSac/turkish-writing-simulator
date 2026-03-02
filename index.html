@@ -1,301 +1,292 @@
-import React, { useState, useEffect } from 'react';
-import { Sun, Moon, Send, RotateCcw, Award, BookOpen, MessageSquare, Info } from 'lucide-react';
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sevim Hoca · B2 Rapor Yazma Simülatörü</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0C0E1A; --surface:#13172B; --surface2:#1B2038; --border:#2A3050;
+  --accent:#C9303A; --accent2:#E8A020; --blue:#3A6EEA; --text:#EEE8DC;
+  --muted:#8890AA; --green:#2ECC8A; --radius:12px;
+  --font-display:'Playfair Display',Georgia,serif;
+  --font-body:'DM Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:15px;line-height:1.65;min-height:100vh;
+background-image:radial-gradient(ellipse 60% 40% at 80% 0%,rgba(58,110,234,.08) 0%,transparent 60%),radial-gradient(ellipse 40% 50% at 10% 90%,rgba(201,48,58,.06) 0%,transparent 60%);}
+header{max-width:1100px;margin:0 auto;padding:28px 24px 0;display:flex;align-items:center;justify-content:space-between;gap:16px;}
+.hoca-card{display:flex;align-items:center;gap:14px;}
+.hoca-avatar{position:relative;width:56px;height:56px;border-radius:50%;border:2px solid var(--accent);overflow:hidden;background:var(--surface2);flex-shrink:0;}
+.hoca-avatar img{width:100%;height:100%;object-fit:cover;object-position:top;}
+.online-dot{position:absolute;bottom:2px;right:2px;width:11px;height:11px;background:var(--green);border-radius:50%;border:2px solid var(--bg);}
+.hoca-info h1{font-family:var(--font-display);font-size:1.3rem;font-weight:700;letter-spacing:.02em;}
+.hoca-info p{font-size:.78rem;color:var(--muted);font-style:italic;}
+.theme-badge{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:5px 14px;font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
+.layout{max-width:1100px;margin:28px auto 60px;padding:0 24px;display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start;}
+@media(max-width:800px){.layout{grid-template-columns:1fr;}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;}
+.card-title{font-family:var(--font-display);font-size:1.05rem;font-weight:700;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.card-title .dot,.section-header .dot{width:8px;height:8px;background:var(--accent);border-radius:50%;flex-shrink:0;}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+@media(max-width:550px){.field-grid{grid-template-columns:1fr;}}
+.field{display:flex;flex-direction:column;gap:5px;}
+label{font-size:.7rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600;}
+input,textarea{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 13px;color:var(--text);font-family:var(--font-body);font-size:.95rem;transition:border-color .2s;resize:vertical;width:100%;outline:none;}
+input:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(58,110,234,.12);}
+textarea{min-height:100px;line-height:1.6;}
+.hint{background:rgba(58,110,234,.07);border-left:3px solid var(--blue);border-radius:0 6px 6px 0;padding:10px 13px;font-size:.83rem;color:#99AACC;margin-bottom:8px;line-height:1.55;}
+.hint strong{color:var(--accent2);font-weight:600;}
+.hint-warn{background:rgba(201,48,58,.08);border-left:3px solid var(--accent);border-radius:0 6px 6px 0;padding:8px 13px;font-size:.78rem;color:#E08890;margin-bottom:8px;font-weight:500;text-transform:uppercase;letter-spacing:.04em;}
+.section-header{font-family:var(--font-display);font-size:1rem;font-weight:700;padding:18px 0 12px;margin-top:10px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.section-header .dot{background:var(--accent2);}
+.body-section{margin-bottom:20px;}
+.body-section>label{font-size:.82rem;color:var(--text);text-transform:none;font-weight:600;letter-spacing:0;margin-bottom:6px;display:block;}
+.submit-btn{width:100%;margin-top:22px;padding:15px;background:var(--accent);color:#fff;font-family:var(--font-body);font-size:.95rem;font-weight:600;border:none;border-radius:var(--radius);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.04em;transition:opacity .2s,transform .1s;}
+.submit-btn:hover:not(:disabled){opacity:.88;}
+.submit-btn:active:not(:disabled){transform:scale(.98);}
+.submit-btn:disabled{opacity:.5;cursor:not-allowed;}
+.sidebar{display:flex;flex-direction:column;gap:18px;position:sticky;top:24px;}
+.score-card{background:var(--surface);border:2px solid var(--accent);border-radius:var(--radius);padding:22px;text-align:center;}
+.score-value{font-family:var(--font-display);font-size:3.8rem;font-weight:900;color:var(--text);line-height:1;transition:all .4s;}
+.score-label{font-size:.65rem;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);margin-top:4px;}
+.score-bars{margin-top:14px;display:flex;flex-direction:column;gap:7px;}
+.score-bar-item{display:flex;align-items:center;gap:8px;font-size:.73rem;color:var(--muted);}
+.score-bar-item span:first-child{width:80px;text-align:right;flex-shrink:0;}
+.bar-track{flex:1;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:3px;transition:width .8s cubic-bezier(.4,0,.2,1);}
+.feedback-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;}
+.teacher-row{display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.teacher-mini-avatar{width:36px;height:36px;border-radius:50%;overflow:hidden;border:1px solid var(--accent);flex-shrink:0;}
+.teacher-mini-avatar img{width:100%;height:100%;object-fit:cover;object-position:top;}
+.teacher-name{font-size:.85rem;font-weight:600;}
+.teacher-role{font-size:.7rem;color:var(--muted);}
+.placeholder-msg{font-size:.83rem;color:var(--muted);font-style:italic;line-height:1.6;}
+.loading-dots{display:flex;gap:6px;justify-content:center;padding:8px 0;}
+.loading-dots span{width:8px;height:8px;background:var(--accent);border-radius:50%;animation:bounce 1.2s infinite;}
+.loading-dots span:nth-child(2){animation-delay:.2s;}
+.loading-dots span:nth-child(3){animation-delay:.4s;}
+@keyframes bounce{0%,80%,100%{transform:translateY(0);opacity:.4;}40%{transform:translateY(-8px);opacity:1;}}
+.fb-success{background:rgba(46,204,138,.08);border-left:3px solid var(--green);border-radius:0 6px 6px 0;padding:10px 13px;margin-bottom:12px;font-size:.83rem;color:#99DDBB;line-height:1.55;}
+.fb-success strong{color:var(--green);display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px;}
+.fb-suggestions{margin-bottom:12px;}
+.fb-suggestions .label{font-size:.68rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin-bottom:6px;font-weight:600;display:block;}
+.suggestion-item{font-size:.8rem;padding:8px 11px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;color:#BCC5E0;line-height:1.5;}
+.word-tip{background:rgba(232,160,32,.08);border:1px solid rgba(232,160,32,.3);border-radius:8px;padding:10px 13px;margin-bottom:12px;}
+.word-tip .wtlabel{font-size:.68rem;color:var(--accent2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px;font-weight:600;}
+.word-tip .wt{font-size:.9rem;font-weight:700;font-style:italic;}
+.motivasyon{font-size:.78rem;color:var(--muted);font-style:italic;text-align:center;padding-top:10px;border-top:1px solid var(--border);line-height:1.6;}
+.error-box{background:rgba(201,48,58,.08);border:1px solid rgba(201,48,58,.3);border-radius:8px;padding:12px;font-size:.82rem;color:#E08890;line-height:1.55;}
+.reset-btn{width:100%;padding:8px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:.78rem;cursor:pointer;transition:border-color .2s,color .2s;display:flex;align-items:center;justify-content:center;gap:6px;font-family:var(--font-body);}
+.reset-btn:hover{border-color:var(--text);color:var(--text);}
+</style>
+</head>
+<body>
 
-const API_KEY = ""; 
+<header>
+  <div class="hoca-card">
+    <div class="hoca-avatar">
+      <img src="https://isinolsun.com/blog/wp-content/uploads/2025/08/kadrolu-ogretmen-nasil-olunur.jpg" alt="Sevim Hoca" onerror="this.style.display='none'">
+      <div class="online-dot"></div>
+    </div>
+    <div class="hoca-info">
+      <h1>Turkish B2 Writing Simulator</h1>
+      <p>Sevim Hoca ile bir rapor yazıp kontrol edelim</p>
+    </div>
+  </div>
+  <div class="theme-badge">B2 · Değerlendirme Raporu</div>
+</header>
 
-const App = () => {
-  const [isDarkMode, setIsDarkMode] = useState(true);
-  const [loading, setLoading] = useState(false);
-  const [feedback, setFeedback] = useState(null);
-  const [score, setScore] = useState(0);
+<div class="layout">
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>Rapor Bilgileri</div>
+    <div class="field-grid">
+      <div class="field"><label>Hazırlayan</label><input id="hazirlayan" type="text" placeholder="Adınız Soyadınız"></div>
+      <div class="field"><label>İlgili Makam (Kime)</label><input id="kime" type="text" placeholder="Örn: Enstitü Müdürlüğü"></div>
+    </div>
+    <div class="field" style="margin-bottom:6px;"><label>Raporun Amacı</label><input id="amac" type="text" placeholder="Raporun yazılma nedenini belirtiniz"></div>
+    <div class="hint">Örnek: Belirli bir nesneyi, süreci veya eseri <strong>incelemek</strong> veya <strong>analiz etmek</strong></div>
 
-  const [formData, setFormData] = useState({
-    hazirlayan: '',
-    kime: '',
-    amac: '',
-    tarih: new Date().toLocaleDateString('tr-TR'),
-    giris: '',
-    icerik: '',
-    kulturel: '',
-    elestirel: '',
-    sonuc: ''
-  });
+    <div class="section-header"><span class="dot"></span>Gövde Metni</div>
 
-  const colors = {
-    dark: { bg: '#0A092D', text: '#FFFAF5', card: '#232F3D', accent: '#D50505', secondary: '#060698' },
-    light: { bg: '#F6ECD9', text: '#232F3D', card: '#FFFAF5', accent: '#D50505', secondary: '#060698' }
-  };
+    <div class="body-section">
+      <label>Giriş</label>
+      <div class="hint">Burada eserin adını ve yazarını belirtiniz.<br><strong>İlk önce</strong>, <strong>başlangıçta</strong>, <strong>ayrıca</strong>, <strong>bu bağlamda</strong> gibi bağlaçları kullanmanız önemlidir.</div>
+      <textarea id="giris" placeholder="Giriş paragrafınızı yazınız..."></textarea>
+    </div>
 
-  const theme = isDarkMode ? colors.dark : colors.light;
+    <div class="body-section">
+      <label>İçerik ve Bilimsellik</label>
+      <div class="hint">İçeriği analiz ederken <strong>ikinci olarak</strong>, <strong>dahası</strong>, <strong>bununla birlikte</strong> bağlaçlarını kullanın. <strong>İçerik derinliği</strong> ve <strong>akademik standartlar</strong> gibi ifadeler ekleyin.</div>
+      <div class="hint-warn">Metni paragraflara ayırmayı, güçlü ve zayıf yönleri belirtmeyi unutmayın</div>
+      <textarea id="icerik" placeholder="İçerik analizinizi yazınız..."></textarea>
+    </div>
 
-  const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+    <div class="body-section">
+      <label>Kültürel / Toplumsal Bakış</label>
+      <div class="hint">Eserin <strong>kültürel çeşitliliği</strong> nasıl yansıttığını ve <strong>güncel bilgiler</strong> içerip içermediğini analiz ediniz. <strong>Tematik bütünlük</strong> titizlikle korunmuş mu?</div>
+      <textarea id="kulturel" placeholder="Kültürel analizinizi yazınız..."></textarea>
+    </div>
 
-  const analyzeText = async () => {
-    setLoading(true);
-    setFeedback(null);
+    <div class="body-section">
+      <label>Eleştirel Görüş</label>
+      <div class="hint">Yazarın bakış açısını yansıtmak için <strong>buna karşın</strong>, <strong>öte yandan</strong>, <strong>her ne kadar… olsa da</strong> gibi ifadeler kullanınız. Görüşlerinizi <strong>nesnel bir tutum</strong> ile sergileyiniz.</div>
+      <textarea id="elestirel" placeholder="Eleştirel görüşlerinizi yazınız..."></textarea>
+    </div>
 
-    const userText = `
-      RAPOR DETAYLARI:
-      Hazırlayan: ${formData.hazirlayan}
-      Kime: ${formData.kime}
-      Amaç: ${formData.amac}
-      Giriş: ${formData.giris}
-      İçerik Analizi: ${formData.icerik}
-      Kültürel Bakış: ${formData.kulturel}
-      Eleştirel Görüş: ${formData.elestirel}
-      Sonuç: ${formData.sonuc}
-    `;
+    <div class="body-section">
+      <label>Sonuç ve Öneriler</label>
+      <div class="hint">Raporu bitirirken <strong>sonuç olarak</strong>, <strong>özetle</strong>, <strong>netice itibarıyla</strong> bağlaçlarını ve <strong>şiddetle tavsiye edilmektedir</strong> gibi kalıpları kullanabilirsiniz.</div>
+      <textarea id="sonuc" placeholder="Sonuç ve önerilerinizi yazınız..."></textarea>
+    </div>
 
-    const systemPrompt = `
-      Sen Sevim Hoca'sın. B2 düzeyi Türkçe yazma becerilerini geliştiren bir öğretmensin. 
-      Üslubun resmi ama B1+ seviyesindeki bir öğrencinin anlayabileceği kadar sade olmalı.
-      
-      ANALİZ KURALLARI:
-      - Duyulan Geçmiş Zaman (yapmışsınız, kullanmışsınız) ve "Siz" hitabı kullan.
-      
-      DEĞERLENDİRME:
-      1. Stratejik Kelimeler (%15)
-      2. Dilbilgisi (%30)
-      3. Bağlaçlar (%25)
-      4. Academic Üslup (%30)
+    <button class="submit-btn" id="submitBtn" onclick="analyzeText()">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      Raporu Gönder
+    </button>
+  </div>
 
-      Yanıt formatın sadece JSON olmalı: 
-      { 
-        "puan": number, 
-        "tebrikler": "Sade bir tebrik cümlesi.", 
-        "gelistirmeler": ["Öneri 1", "Öneri 2"], 
-        "onerilenKelime": "Kelime", 
-        "motivasyon": "Motivasyon" 
-      }
-    `;
-
-    try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${API_KEY}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: userText }] }],
-          systemInstruction: { parts: [{ text: systemPrompt }] },
-          generationConfig: { responseMimeType: "application/json" }
-        })
-      });
-
-      const data = await response.json();
-      const result = JSON.parse(data.candidates[0].content.parts[0].text);
-      setFeedback(result);
-      setScore(result.puan);
-    } catch (error) {
-      console.error("Hata:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="min-h-screen transition-colors duration-300 p-4 md:p-8 font-sans" style={{ backgroundColor: theme.bg, color: theme.text }}>
-      
-      <div className="max-w-5xl mx-auto flex justify-between items-center mb-8 border-b pb-4" style={{ borderColor: theme.accent }}>
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            {/* Налаштовано object-position для кращого кадрування */}
-            <div className="w-16 h-16 rounded-full border-2 overflow-hidden bg-gray-200 shadow-md" style={{ borderColor: theme.accent }}>
-               <img 
-                src="https://isinolsun.com/blog/wp-content/uploads/2025/08/kadrolu-ogretmen-nasil-olunur.jpg" 
-                alt="Sevim Hoca" 
-                className="w-full h-full object-cover object-top"
-                onError={(e) => { e.target.src = "https://via.placeholder.com/150?text=Hoca"; }}
-               />
-            </div>
-            <div className="absolute -bottom-1 -right-1 bg-green-500 w-4 h-4 rounded-full border-2 border-white"></div>
-          </div>
-          <div>
-            <h1 className="text-xl md:text-2xl font-bold flex items-center gap-2">
-              Turkish B2 Writing Simulator
-            </h1>
-            <p className="opacity-80 italic text-sm mt-0.5">Sevim Hoca ile bir rapor yazıp kontrol edelim</p>
-          </div>
-        </div>
-        <button 
-          onClick={() => setIsDarkMode(!isDarkMode)}
-          className="p-2 rounded-full border-2 transition-transform hover:scale-110"
-          style={{ borderColor: theme.accent, backgroundColor: theme.card }}
-        >
-          {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-        </button>
-      </div>
-
-      <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        <div className="lg:col-span-2 space-y-6">
-          <div className="p-6 rounded-xl shadow-lg" style={{ backgroundColor: theme.card }}>
-            <h2 className="text-xl font-bold mb-4 flex items-center gap-2 border-b pb-2" style={{ borderColor: theme.accent }}>
-              Rapor Bilgileri
-            </h2>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="text-xs block mb-1 opacity-70 font-bold uppercase">Hazırlayan</label>
-                <input name="hazirlayan" value={formData.hazirlayan} onChange={handleInputChange} className="w-full p-2 rounded bg-transparent border border-gray-600 focus:outline-none" placeholder="Adınız Soyadınız" />
-              </div>
-              <div>
-                <label className="text-xs block mb-1 opacity-70 font-bold uppercase">İlgili Makam (Kime)</label>
-                <input name="kime" value={formData.kime} onChange={handleInputChange} className="w-full p-2 rounded bg-transparent border border-gray-600 focus:outline-none" placeholder="Örn: Enstitü Müdürlüğü" />
-              </div>
-            </div>
-            
-            <div className="mb-6">
-              <label className="text-xs block mb-1 opacity-70 font-bold uppercase">Raporun Amacı</label>
-              <input name="amac" value={formData.amac} onChange={handleInputChange} className="w-full p-2 rounded bg-transparent border border-gray-600 focus:outline-none mb-1" placeholder="Raporun yazılma nedenini belirtiniz" />
-              <p className="text-[18px] font-medium" style={{ color: '#FFFAF5' }}>
-                Örnek: Belirli bir nesneyi, süreci veya eseri **incelemek** veya **analiz etmek**
-              </p>
-            </div>
-
-            <h2 className="text-xl font-bold mb-4 mt-8 border-b pb-2 flex items-center gap-2" style={{ borderColor: theme.accent }}>
-              Gövde Metni
-            </h2>
-            
-            <div className="space-y-8">
-              {/* Giriş */}
-              <div className="space-y-1">
-                <label className="block text-sm font-bold">Giriş</label>
-                <div className="text-[18px] mb-2 p-3 rounded bg-black bg-opacity-20 leading-snug">
-                   Burada eserin adını ve yazarını belirtiniz. <br/>
-                   **İlk önce**, **başlangıçta**, **ayrıca**, **bu bağlamda** gibi bağlaçları kullanmanız önemlidir.
-                </div>
-                <textarea name="giris" value={formData.giris} onChange={handleInputChange} className="w-full p-3 rounded bg-transparent border border-gray-600 focus:outline-none min-h-[100px] text-lg" />
-              </div>
-
-              {/* İçerik */}
-              <div className="space-y-1">
-                <label className="block text-sm font-bold">İçerik ve Bilimsellik</label>
-                <div className="text-[18px] mb-2 p-3 rounded bg-black bg-opacity-20 leading-snug">
-                  İçeriği analiz ederken **ikinci olarak**, **dahası**, **bununla birlikte** bağlaçlarını kullanın. 
-                  **İçerik derinliği** ve **akademik standartlar** gibi ifadeler ekleyin.
-                </div>
-                <p className="text-[14px] font-bold text-red-500 mb-2 uppercase underline">
-                  Önemli: Metni paragraflara ayırmayı, güçlü ve zayıf yönleri belirtmeyi unutmayın
-                </p>
-                <textarea name="icerik" value={formData.icerik} onChange={handleInputChange} className="w-full p-3 rounded bg-transparent border border-gray-600 focus:outline-none min-h-[120px] text-lg" />
-              </div>
-
-              {/* Kültürel */}
-              <div className="space-y-1">
-                <label className="block text-sm font-bold">Kültürel / Toplumsal Bakış</label>
-                <div className="text-[18px] mb-2 p-3 rounded bg-black bg-opacity-20 leading-snug">
-                  Eserin **kültürel çeşitliliği** nasıl yansıttığını ve **güncel bilgiler** içerip içermediğini analiz ediniz. 
-                  **Tematik bütünlük** titizlikle korunmuş mu? **Pratik uygulamalar** ve **güncellik** açısından değerlendiriniz.
-                </div>
-                <textarea name="kulturel" value={formData.kulturel} onChange={handleInputChange} className="w-full p-3 rounded bg-transparent border border-gray-600 focus:outline-none min-h-[100px] text-lg" />
-              </div>
-
-              {/* Eleştirel */}
-              <div className="space-y-1">
-                <label className="block text-sm font-bold">Eleştirel Görüş</label>
-                <div className="text-[18px] mb-2 p-3 rounded bg-black bg-opacity-20 leading-snug">
-                  Yazarın bakış açısını yansıtmak için **buna karşın**, **öte yandan**, **her ne kadar... olsa da** gibi ifadeler kullanınız. <br/>
-                  Görüşlerinizi **nesnel bir tutum** ile sergileyiniz.
-                </div>
-                <textarea name="elestirel" value={formData.elestirel} onChange={handleInputChange} className="w-full p-3 rounded bg-transparent border border-gray-600 focus:outline-none min-h-[100px] text-lg" />
-              </div>
-
-              {/* Sonuç */}
-              <div className="space-y-1">
-                <label className="block text-sm font-bold">Sonuç ve Öneriler</label>
-                <div className="text-[18px] mb-2 p-3 rounded bg-black bg-opacity-20 leading-snug">
-                   Raporu bitirirken **sonuç olarak**, **özetle**, **netice itibarıyla** bağlaçlarını ve **şiddetle tavsiye edilmektedir** gibi kalıpları kullanabilirsiniz
-                </div>
-                <textarea name="sonuc" value={formData.sonuc} onChange={handleInputChange} className="w-full p-3 rounded bg-transparent border border-gray-600 focus:outline-none min-h-[100px] text-lg" />
-              </div>
-            </div>
-
-            <button 
-              onClick={analyzeText}
-              disabled={loading}
-              className="w-full mt-8 py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all hover:opacity-90 active:scale-95 shadow-xl"
-              style={{ backgroundColor: theme.accent, color: 'white' }}
-            >
-              {loading ? "Sevim Hoca İnceliyor..." : <><Send size={18} /> Raporu Gönder</>}
-            </button>
-          </div>
-        </div>
-
-        <div className="lg:col-span-1">
-          <div className="sticky top-8 space-y-6">
-            
-            <div className="p-6 rounded-xl shadow-lg text-center" style={{ backgroundColor: theme.card, border: `2px solid ${theme.accent}` }}>
-              <Award size={40} className="mx-auto mb-2 text-red-500" />
-              <h3 className="text-4xl font-black mb-1">{score}</h3>
-              <p className="text-xs opacity-70 uppercase tracking-widest font-bold">Başarı Puanı</p>
-            </div>
-
-            <div className="p-6 rounded-xl shadow-lg" style={{ backgroundColor: theme.card }}>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-full border border-gray-600 overflow-hidden">
-                   <img 
-                    src="https://isinolsun.com/blog/wp-content/uploads/2025/08/kadrolu-ogretmen-nasil-olunur.jpg" 
-                    alt="Sevim Hoca" 
-                    className="w-full h-full object-cover object-top"
-                   />
-                </div>
-                <div>
-                  <h4 className="font-bold text-sm">Sevim Hoca</h4>
-                  <p className="text-[10px] opacity-60">Akademik Danışman</p>
-                </div>
-              </div>
-
-              {!feedback && !loading && (
-                <div className="text-sm italic opacity-70 leading-relaxed">
-                  Raporunuzun ana hatlarını belirlemiş ve bir başlangıç yapmış olmanız takdire şayandır. Konuya yönelik bir çerçeve oluşturma gayretinizi görmüş bulunmaktayım.
-                </div>
-              )}
-
-              {loading && (
-                <div className="space-y-3 text-center">
-                  <div className="animate-pulse text-sm">Sevim Hoca raporunuzu okuyor...</div>
-                  <div className="h-2 bg-gray-600 rounded overflow-hidden">
-                    <div className="bg-red-500 h-full animate-progress" style={{ width: '60%' }}></div>
-                  </div>
-                </div>
-              )}
-
-              {feedback && (
-                <div className="space-y-4 animate-in slide-in-from-right duration-500">
-                  <div className="p-3 rounded bg-green-500 bg-opacity-10 border-l-4 border-green-500">
-                    <p className="text-sm font-bold">Tebrikler!</p>
-                    <p className="text-xs opacity-90">{feedback.tebrikler}</p>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <p className="text-[10px] font-bold uppercase opacity-50">Önerilerim:</p>
-                    {feedback.gelistirmeler.map((item, idx) => (
-                      <div key={idx} className="text-xs p-3 rounded bg-white bg-opacity-5 border border-gray-00 text-gray-200">
-                        {item}
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="p-3 rounded bg-blue-900 bg-opacity-20 border border-blue-500">
-                    <p className="text-[10px] font-bold text-blue-400 mb-1">Yeni bir kelime deneyin:</p>
-                    <p className="text-sm font-bold italic">"{feedback.onerilenKelime}"</p>
-                  </div>
-
-                  <p className="text-xs italic border-t pt-3 mt-4 opacity-70 text-center">
-                    {feedback.motivasyon}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <button onClick={() => window.location.reload()} className="w-full py-2 text-xs flex items-center justify-center gap-2 opacity-50 hover:opacity-100 transition-opacity">
-              <RotateCcw size={12} /> Sayfayı Temizle
-            </button>
-          </div>
-        </div>
+  <div class="sidebar">
+    <div class="score-card">
+      <div class="score-value" id="scoreVal">—</div>
+      <div class="score-label">Başarı Puanı</div>
+      <div class="score-bars" id="scoreBars" style="display:none;">
+        <div class="score-bar-item"><span>Kelimeler</span><div class="bar-track"><div class="bar-fill" id="bar1" style="background:#C9303A;width:0%"></div></div><span id="b1v">0</span></div>
+        <div class="score-bar-item"><span>Dilbilgisi</span><div class="bar-track"><div class="bar-fill" id="bar2" style="background:#3A6EEA;width:0%"></div></div><span id="b2v">0</span></div>
+        <div class="score-bar-item"><span>Bağlaçlar</span><div class="bar-track"><div class="bar-fill" id="bar3" style="background:#E8A020;width:0%"></div></div><span id="b3v">0</span></div>
+        <div class="score-bar-item"><span>Üslup</span><div class="bar-track"><div class="bar-fill" id="bar4" style="background:#2ECC8A;width:0%"></div></div><span id="b4v">0</span></div>
       </div>
     </div>
-  );
-};
 
-export default App;
+    <div class="feedback-card">
+      <div class="teacher-row">
+        <div class="teacher-mini-avatar"><img src="https://isinolsun.com/blog/wp-content/uploads/2025/08/kadrolu-ogretmen-nasil-olunur.jpg" alt="Sevim Hoca" onerror="this.style.display='none'"></div>
+        <div><div class="teacher-name">Sevim Hoca</div><div class="teacher-role">Akademik Danışman</div></div>
+      </div>
+      <div id="feedbackArea">
+        <p class="placeholder-msg">Raporunuzun ana hatlarını belirlemiş ve bir başlangıç yapmış olmanız takdire şayandır. Konuya yönelik bir çerçeve oluşturma gayretinizi görmüş bulunmaktayım.</p>
+      </div>
+    </div>
+
+    <button class="reset-btn" onclick="resetForm()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>
+      Sayfayı Temizle
+    </button>
+  </div>
+</div>
+
+<script>
+async function analyzeText() {
+  var ids = ['hazirlayan','kime','amac','giris','icerik','kulturel','elestirel','sonuc'];
+  var f = {};
+  ids.forEach(function(id){ f[id] = document.getElementById(id).value.trim(); });
+
+  if (Object.values(f).join('').length < 30) {
+    showError('Lütfen en az birkaç alan doldurunuz.');
+    return;
+  }
+
+  setLoading(true);
+
+  var userText = [
+    'RAPOR DETAYLARI:',
+    'Hazırlayan: ' + f.hazirlayan,
+    'Kime: ' + f.kime,
+    'Amaç: ' + f.amac,
+    'Giriş: ' + f.giris,
+    'İçerik Analizi: ' + f.icerik,
+    'Kültürel Bakış: ' + f.kulturel,
+    'Eleştirel Görüş: ' + f.elestirel,
+    'Sonuç: ' + f.sonuc
+  ].join('\n');
+
+  var systemPrompt = "Sen Sevim Hoca'sın. B2 düzeyi Türkçe yazma becerilerini geliştiren bir öğretmensin.\nÜslubun resmi ama B1+ seviyesindeki bir öğrencinin anlayabileceği kadar sade olmalı.\nDuyulan Geçmiş Zaman (yapmışsınız, kullanmışsınız) ve 'Siz' hitabı kullan.\n\nDEĞERLENDİRME KRİTERLERİ:\n1. Stratejik Kelimeler (15 puan)\n2. Dilbilgisi (30 puan)\n3. Bağlaçlar (25 puan)\n4. Akademik Üslup (30 puan)\n\nYanıtın SADECE geçerli JSON olmalı:\n{\"puan\":0,\"kelimeler\":0,\"dilbilgisi\":0,\"baglaclar\":0,\"uslup\":0,\"tebrikler\":\"\",\"gelistirmeler\":[\"\",\"\",\"\"],\"onerilenKelime\":\"\",\"motivasyon\":\"\"}";
+
+  try {
+    var response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userText }]
+      })
+    });
+
+    if (!response.ok) {
+      var err = await response.json().catch(function(){ return {}; });
+      throw new Error((err.error && err.error.message) || 'HTTP ' + response.status);
+    }
+
+    var data = await response.json();
+    var raw = data.content.filter(function(b){ return b.type === 'text'; }).map(function(b){ return b.text; }).join('');
+    var cleaned = raw.replace(/```json|```/g, '').trim();
+    var result = JSON.parse(cleaned);
+    showFeedback(result);
+
+  } catch(err) {
+    console.error(err);
+    showError('Bir hata oluştu: ' + err.message + '\n\nİnternet bağlantınızı kontrol ediniz veya daha sonra tekrar deneyiniz.');
+  } finally {
+    setLoading(false);
+  }
+}
+
+function setLoading(on) {
+  var btn = document.getElementById('submitBtn');
+  var area = document.getElementById('feedbackArea');
+  if (on) {
+    btn.disabled = true;
+    btn.textContent = 'Sevim Hoca İnceliyor...';
+    area.innerHTML = '<p class="placeholder-msg" style="margin-bottom:14px">Raporunuz okunuyor, lütfen bekleyiniz...</p><div class="loading-dots"><span></span><span></span><span></span></div>';
+  } else {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Raporu Gönder';
+  }
+}
+
+function showFeedback(r) {
+  var sv = document.getElementById('scoreVal');
+  sv.textContent = r.puan;
+  sv.style.color = r.puan >= 80 ? '#2ECC8A' : r.puan >= 60 ? '#E8A020' : '#C9303A';
+  document.getElementById('scoreBars').style.display = 'flex';
+  setBar('bar1','b1v', r.kelimeler, 15);
+  setBar('bar2','b2v', r.dilbilgisi, 30);
+  setBar('bar3','b3v', r.baglaclar, 25);
+  setBar('bar4','b4v', r.uslup, 30);
+  var suggestions = (r.gelistirmeler || []).map(function(s){ return '<div class="suggestion-item">' + esc(s) + '</div>'; }).join('');
+  document.getElementById('feedbackArea').innerHTML =
+    '<div class="fb-success"><strong>Tebrikler!</strong>' + esc(r.tebrikler) + '</div>' +
+    '<div class="fb-suggestions"><span class="label">Önerilerim:</span>' + suggestions + '</div>' +
+    '<div class="word-tip"><div class="wtlabel">Yeni bir kelime deneyin:</div><div class="wt">"' + esc(r.onerilenKelime) + '"</div></div>' +
+    '<div class="motivasyon">' + esc(r.motivasyon) + '</div>';
+}
+
+function showError(msg) {
+  document.getElementById('feedbackArea').innerHTML = '<div class="error-box">' + esc(msg) + '</div>';
+}
+
+function setBar(barId, valId, val, max) {
+  document.getElementById(barId).style.width = Math.round(Math.min(val / max, 1) * 100) + '%';
+  document.getElementById(valId).textContent = val;
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>');
+}
+
+function resetForm() {
+  ['hazirlayan','kime','amac','giris','icerik','kulturel','elestirel','sonuc'].forEach(function(id){
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('scoreVal').textContent = '—';
+  document.getElementById('scoreVal').style.color = '';
+  document.getElementById('scoreBars').style.display = 'none';
+  document.getElementById('feedbackArea').innerHTML = '<p class="placeholder-msg">Raporunuzun ana hatlarını belirlemiş ve bir başlangıç yapmış olmanız takdire şayandır. Konuya yönelik bir çerçeve oluşturma gayretinizi görmüş bulunmaktayım.</p>';
+}
+</script>
+</body>
+</html>
