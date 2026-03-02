@@ -205,7 +205,7 @@ async function analyzeText() {
   var systemPrompt = "Sen Sevim Hoca'sın. B2 düzeyi Türkçe yazma becerilerini geliştiren bir öğretmensin.\nÜslubun resmi ama B1+ seviyesindeki bir öğrencinin anlayabileceği kadar sade olmalı.\nDuyulan Geçmiş Zaman (yapmışsınız, kullanmışsınız) ve 'Siz' hitabı kullan.\n\nDEĞERLENDİRME KRİTERLERİ:\n1. Stratejik Kelimeler (15 puan)\n2. Dilbilgisi (30 puan)\n3. Bağlaçlar (25 puan)\n4. Akademik Üslup (30 puan)\n\nYanıtın SADECE geçerli JSON olmalı:\n{\"puan\":0,\"kelimeler\":0,\"dilbilgisi\":0,\"baglaclar\":0,\"uslup\":0,\"tebrikler\":\"\",\"gelistirmeler\":[\"\",\"\",\"\"],\"onerilenKelime\":\"\",\"motivasyon\":\"\"}";
 
   try {
-    var response = await fetch('https://api.anthropic.com/v1/messages', {
+    var response = await fetch('https://calm-fire-95a5.khlipovka.workers.dev', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
