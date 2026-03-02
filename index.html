@@ -1,0 +1,301 @@
+import React, { useState, useEffect } from 'react';
+import { Sun, Moon, Send, RotateCcw, Award, BookOpen, MessageSquare, Info } from 'lucide-react';
+
+const API_KEY = ""; 
+
+const App = () => {
+  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [feedback, setFeedback] = useState(null);
+  const [score, setScore] = useState(0);
+
+  const [formData, setFormData] = useState({
+    hazirlayan: '',
+    kime: '',
+    amac: '',
+    tarih: new Date().toLocaleDateString('tr-TR'),
+    giris: '',
+    icerik: '',
+    kulturel: '',
+    elestirel: '',
+    sonuc: ''
+  });
+
+  const colors = {
+    dark: { bg: '#0A092D', text: '#FFFAF5', card: '#232F3D', accent: '#D50505', secondary: '#060698' },
+    light: { bg: '#F6ECD9', text: '#232F3D', card: '#FFFAF5', accent: '#D50505', secondary: '#060698' }
+  };
+
+  const theme = isDarkMode ? colors.dark : colors.light;
+
+  const handleInputChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const analyzeText = async () => {
+    setLoading(true);
+    setFeedback(null);
+
+    const userText = `
+      RAPOR DETAYLARI:
+      Hazırlayan: ${formData.hazirlayan}
+      Kime: ${formData.kime}
+      Amaç: ${formData.amac}
+      Giriş: ${formData.giris}
+      İçerik Analizi: ${formData.icerik}
+      Kültürel Bakış: ${formData.kulturel}
+      Eleştirel Görüş: ${formData.elestirel}
+      Sonuç: ${formData.sonuc}
+    `;
+
+    const systemPrompt = `
+      Sen Sevim Hoca'sın. B2 düzeyi Türkçe yazma becerilerini geliştiren bir öğretmensin. 
+      Üslubun resmi ama B1+ seviyesindeki bir öğrencinin anlayabileceği kadar sade olmalı.
+      
+      ANALİZ KURALLARI:
+      - Duyulan Geçmiş Zaman (yapmışsınız, kullanmışsınız) ve "Siz" hitabı kullan.
+      
+      DEĞERLENDİRME:
+      1. Stratejik Kelimeler (%15)
+      2. Dilbilgisi (%30)
+      3. Bağlaçlar (%25)
+      4. Academic Üslup (%30)
+
+      Yanıt formatın sadece JSON olmalı: 
+      { 
+        "puan": number, 
+        "tebrikler": "Sade bir tebrik cümlesi.", 
+        "gelistirmeler": ["Öneri 1", "Öneri 2"], 
+        "onerilenKelime": "Kelime", 
+        "motivasyon": "Motivasyon" 
+      }
+    `;
+
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${API_KEY}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: userText }] }],
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          generationConfig: { responseMimeType: "application/json" }
+        })
+      });
+
+      const data = await response.json();
+      const result = JSON.parse(data.candidates[0].content.parts[0].text);
+      setFeedback(result);
+      setScore(result.puan);
+    } catch (error) {
+      console.error("Hata:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen transition-colors duration-300 p-4 md:p-8 font-sans" style={{ backgroundColor: theme.bg, color: theme.text }}>
+      
+      <div className="max-w-5xl mx-auto flex justify-between items-center mb-8 border-b pb-4" style={{ borderColor: theme.accent }}>
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            {/* Налаштовано object-position для кращого кадрування */}
+            <div className="w-16 h-16 rounded-full border-2 overflow-hidden bg-gray-200 shadow-md" style={{ borderColor: theme.accent }}>
+               <img 
+                src="https://isinolsun.com/blog/wp-content/uploads/2025/08/kadrolu-ogretmen-nasil-olunur.jpg" 
+                alt="Sevim Hoca" 
+                className="w-full h-full object-cover object-top"
+                onError={(e) => { e.target.src = "https://via.placeholder.com/150?text=Hoca"; }}
+               />
+            </div>
+            <div className="absolute -bottom-1 -right-1 bg-green-500 w-4 h-4 rounded-full border-2 border-white"></div>
+          </div>
+          <div>
+            <h1 className="text-xl md:text-2xl font-bold flex items-center gap-2">
+              Turkish B2 Writing Simulator
+            </h1>
+            <p className="opacity-80 italic text-sm mt-0.5">Sevim Hoca ile bir rapor yazıp kontrol edelim</p>
+          </div>
+        </div>
+        <button 
+          onClick={() => setIsDarkMode(!isDarkMode)}
+          className="p-2 rounded-full border-2 transition-transform hover:scale-110"
+          style={{ borderColor: theme.accent, backgroundColor: theme.card }}
+        >
+          {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+        </button>
+      </div>
+
+      <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <div className="lg:col-span-2 space-y-6">
+          <div className="p-6 rounded-xl shadow-lg" style={{ backgroundColor: theme.card }}>
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2 border-b pb-2" style={{ borderColor: theme.accent }}>
+              Rapor Bilgileri
+            </h2>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="text-xs block mb-1 opacity-70 font-bold uppercase">Hazırlayan</label>
+                <input name="hazirlayan" value={formData.hazirlayan} onChange={handleInputChange} className="w-full p-2 rounded bg-transparent border border-gray-600 focus:outline-none" placeholder="Adınız Soyadınız" />
+              </div>
+              <div>
+                <label className="text-xs block mb-1 opacity-70 font-bold uppercase">İlgili Makam (Kime)</label>
+                <input name="kime" value={formData.kime} onChange={handleInputChange} className="w-full p-2 rounded bg-transparent border border-gray-600 focus:outline-none" placeholder="Örn: Enstitü Müdürlüğü" />
+              </div>
+            </div>
+            
+            <div className="mb-6">
+              <label className="text-xs block mb-1 opacity-70 font-bold uppercase">Raporun Amacı</label>
+              <input name="amac" value={formData.amac} onChange={handleInputChange} className="w-full p-2 rounded bg-transparent border border-gray-600 focus:outline-none mb-1" placeholder="Raporun yazılma nedenini belirtiniz" />
+              <p className="text-[18px] font-medium" style={{ color: '#FFFAF5' }}>
+                Örnek: Belirli bir nesneyi, süreci veya eseri **incelemek** veya **analiz etmek**
+              </p>
+            </div>
+
+            <h2 className="text-xl font-bold mb-4 mt-8 border-b pb-2 flex items-center gap-2" style={{ borderColor: theme.accent }}>
+              Gövde Metni
+            </h2>
+            
+            <div className="space-y-8">
+              {/* Giriş */}
+              <div className="space-y-1">
+                <label className="block text-sm font-bold">Giriş</label>
+                <div className="text-[18px] mb-2 p-3 rounded bg-black bg-opacity-20 leading-snug">
+                   Burada eserin adını ve yazarını belirtiniz. <br/>
+                   **İlk önce**, **başlangıçta**, **ayrıca**, **bu bağlamda** gibi bağlaçları kullanmanız önemlidir.
+                </div>
+                <textarea name="giris" value={formData.giris} onChange={handleInputChange} className="w-full p-3 rounded bg-transparent border border-gray-600 focus:outline-none min-h-[100px] text-lg" />
+              </div>
+
+              {/* İçerik */}
+              <div className="space-y-1">
+                <label className="block text-sm font-bold">İçerik ve Bilimsellik</label>
+                <div className="text-[18px] mb-2 p-3 rounded bg-black bg-opacity-20 leading-snug">
+                  İçeriği analiz ederken **ikinci olarak**, **dahası**, **bununla birlikte** bağlaçlarını kullanın. 
+                  **İçerik derinliği** ve **akademik standartlar** gibi ifadeler ekleyin.
+                </div>
+                <p className="text-[14px] font-bold text-red-500 mb-2 uppercase underline">
+                  Önemli: Metni paragraflara ayırmayı, güçlü ve zayıf yönleri belirtmeyi unutmayın
+                </p>
+                <textarea name="icerik" value={formData.icerik} onChange={handleInputChange} className="w-full p-3 rounded bg-transparent border border-gray-600 focus:outline-none min-h-[120px] text-lg" />
+              </div>
+
+              {/* Kültürel */}
+              <div className="space-y-1">
+                <label className="block text-sm font-bold">Kültürel / Toplumsal Bakış</label>
+                <div className="text-[18px] mb-2 p-3 rounded bg-black bg-opacity-20 leading-snug">
+                  Eserin **kültürel çeşitliliği** nasıl yansıttığını ve **güncel bilgiler** içerip içermediğini analiz ediniz. 
+                  **Tematik bütünlük** titizlikle korunmuş mu? **Pratik uygulamalar** ve **güncellik** açısından değerlendiriniz.
+                </div>
+                <textarea name="kulturel" value={formData.kulturel} onChange={handleInputChange} className="w-full p-3 rounded bg-transparent border border-gray-600 focus:outline-none min-h-[100px] text-lg" />
+              </div>
+
+              {/* Eleştirel */}
+              <div className="space-y-1">
+                <label className="block text-sm font-bold">Eleştirel Görüş</label>
+                <div className="text-[18px] mb-2 p-3 rounded bg-black bg-opacity-20 leading-snug">
+                  Yazarın bakış açısını yansıtmak için **buna karşın**, **öte yandan**, **her ne kadar... olsa da** gibi ifadeler kullanınız. <br/>
+                  Görüşlerinizi **nesnel bir tutum** ile sergileyiniz.
+                </div>
+                <textarea name="elestirel" value={formData.elestirel} onChange={handleInputChange} className="w-full p-3 rounded bg-transparent border border-gray-600 focus:outline-none min-h-[100px] text-lg" />
+              </div>
+
+              {/* Sonuç */}
+              <div className="space-y-1">
+                <label className="block text-sm font-bold">Sonuç ve Öneriler</label>
+                <div className="text-[18px] mb-2 p-3 rounded bg-black bg-opacity-20 leading-snug">
+                   Raporu bitirirken **sonuç olarak**, **özetle**, **netice itibarıyla** bağlaçlarını ve **şiddetle tavsiye edilmektedir** gibi kalıpları kullanabilirsiniz
+                </div>
+                <textarea name="sonuc" value={formData.sonuc} onChange={handleInputChange} className="w-full p-3 rounded bg-transparent border border-gray-600 focus:outline-none min-h-[100px] text-lg" />
+              </div>
+            </div>
+
+            <button 
+              onClick={analyzeText}
+              disabled={loading}
+              className="w-full mt-8 py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all hover:opacity-90 active:scale-95 shadow-xl"
+              style={{ backgroundColor: theme.accent, color: 'white' }}
+            >
+              {loading ? "Sevim Hoca İnceliyor..." : <><Send size={18} /> Raporu Gönder</>}
+            </button>
+          </div>
+        </div>
+
+        <div className="lg:col-span-1">
+          <div className="sticky top-8 space-y-6">
+            
+            <div className="p-6 rounded-xl shadow-lg text-center" style={{ backgroundColor: theme.card, border: `2px solid ${theme.accent}` }}>
+              <Award size={40} className="mx-auto mb-2 text-red-500" />
+              <h3 className="text-4xl font-black mb-1">{score}</h3>
+              <p className="text-xs opacity-70 uppercase tracking-widest font-bold">Başarı Puanı</p>
+            </div>
+
+            <div className="p-6 rounded-xl shadow-lg" style={{ backgroundColor: theme.card }}>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-full border border-gray-600 overflow-hidden">
+                   <img 
+                    src="https://isinolsun.com/blog/wp-content/uploads/2025/08/kadrolu-ogretmen-nasil-olunur.jpg" 
+                    alt="Sevim Hoca" 
+                    className="w-full h-full object-cover object-top"
+                   />
+                </div>
+                <div>
+                  <h4 className="font-bold text-sm">Sevim Hoca</h4>
+                  <p className="text-[10px] opacity-60">Akademik Danışman</p>
+                </div>
+              </div>
+
+              {!feedback && !loading && (
+                <div className="text-sm italic opacity-70 leading-relaxed">
+                  Raporunuzun ana hatlarını belirlemiş ve bir başlangıç yapmış olmanız takdire şayandır. Konuya yönelik bir çerçeve oluşturma gayretinizi görmüş bulunmaktayım.
+                </div>
+              )}
+
+              {loading && (
+                <div className="space-y-3 text-center">
+                  <div className="animate-pulse text-sm">Sevim Hoca raporunuzu okuyor...</div>
+                  <div className="h-2 bg-gray-600 rounded overflow-hidden">
+                    <div className="bg-red-500 h-full animate-progress" style={{ width: '60%' }}></div>
+                  </div>
+                </div>
+              )}
+
+              {feedback && (
+                <div className="space-y-4 animate-in slide-in-from-right duration-500">
+                  <div className="p-3 rounded bg-green-500 bg-opacity-10 border-l-4 border-green-500">
+                    <p className="text-sm font-bold">Tebrikler!</p>
+                    <p className="text-xs opacity-90">{feedback.tebrikler}</p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-bold uppercase opacity-50">Önerilerim:</p>
+                    {feedback.gelistirmeler.map((item, idx) => (
+                      <div key={idx} className="text-xs p-3 rounded bg-white bg-opacity-5 border border-gray-00 text-gray-200">
+                        {item}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="p-3 rounded bg-blue-900 bg-opacity-20 border border-blue-500">
+                    <p className="text-[10px] font-bold text-blue-400 mb-1">Yeni bir kelime deneyin:</p>
+                    <p className="text-sm font-bold italic">"{feedback.onerilenKelime}"</p>
+                  </div>
+
+                  <p className="text-xs italic border-t pt-3 mt-4 opacity-70 text-center">
+                    {feedback.motivasyon}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <button onClick={() => window.location.reload()} className="w-full py-2 text-xs flex items-center justify-center gap-2 opacity-50 hover:opacity-100 transition-opacity">
+              <RotateCcw size={12} /> Sayfayı Temizle
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default App;
